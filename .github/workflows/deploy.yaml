@@ -12,39 +12,38 @@ jobs:
       AWS_DEFAULT_REGION: us-east-1  # Set your AWS region here
 
     steps:
-    - name: Checkout source code
-      uses: actions/checkout@v2
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-    # Assuming AWS CLI is pre-configured in the runner; otherwise, you'd also need aws-actions/configure-aws-credentials
-    - name: Configure AWS CLI Region
-      run: |
-        aws configure set default.region ${{ env.AWS_DEFAULT_REGION }}
-        aws configure list
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/my-github-actions-role
+          aws-region: us-east-1
 
-    - name: Log in to Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v2
-      # If you do not need to use Docker credentials in subsequent steps, remove the with block below
-      # If you need to use Docker credentials, uncomment and use the following lines:
-      # with:
-      #   mask-password: 'false'
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask-password: 'false'
 
-    - name: Build, tag, and push image to Amazon ECR
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: testks9004
-        IMAGE_TAG: latest
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: testks9004
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-    - name: Deploy to AWS Elastic Beanstalk
-      uses: einaregilsson/beanstalk-deploy@v18
-      with:
-        aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        application_name: testks9004
-        environment_name: Testks9004-env-5
-        version_label: ${{ github.sha }}
-        region: us-east-1
-        existing_bucket_name: elasticbeanstalk-us-east-1-767397711048
-        deployment_package: deploy.zip
+      - name: Deploy to AWS Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v18
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: testks9004
+          environment_name: Testks9004-env-5
+          version_label: ${{ github.sha }}
+          region: us-east-1
+          existing_bucket_name: elasticbeanstalk-us-east-1-767397711048
+          deployment_package: deploy.zip
