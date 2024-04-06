@@ -30,7 +30,7 @@ jobs:
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          region: ${{ secrets.AWS_REGION }}  # Added this line
+          region: us-east-1 # Added this line
           application_name: testks9004
           environment_name: Testks9004-env-5
           version_label: ${{ github.sha }}
